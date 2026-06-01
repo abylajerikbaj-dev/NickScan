@@ -1,4 +1,4 @@
-/* ====================================
+/* ===================================="
    NickScan - Cyber Dark Glassmorphism
    Multi-Platform OSINT Search
    ==================================== */
@@ -58,7 +58,7 @@ html, body {
     background-attachment: fixed;
 }
 
-/* ====================================
+/* ===================================="
    Main Container & Layout
    ==================================== */
 
@@ -144,7 +144,7 @@ header.header-section {
     color: var(--border-cyan-faint);
 }
 
-/* ====================================
+/* ===================================="
    Main Content Area
    ==================================== */
 
@@ -159,7 +159,7 @@ header.header-section {
     gap: 24px;
 }
 
-/* ====================================
+/* ===================================="
    Search Section
    ==================================== */
 
@@ -246,7 +246,7 @@ header.header-section {
     border: 1px solid rgba(139, 92, 246, 0.2);
 }
 
-/* ====================================
+/* ===================================="
    Warning Banner
    ==================================== */
 
@@ -294,7 +294,7 @@ header.header-section {
     }
 }
 
-/* ====================================
+/* ===================================="
    Results Section - Grid Layout
    ==================================== */
 
@@ -336,7 +336,7 @@ header.header-section {
     font-size: 15px;
 }
 
-/* ====================================
+/* ===================================="
    Platform Card
    ==================================== */
 
@@ -490,13 +490,21 @@ header.header-section {
     white-space: nowrap;
 }
 
-/* ====================================
+/* ===================================="
    Card Content
    ==================================== */
 
 .card-content {
     margin-bottom: 16px;
     flex: 1;
+}
+
+.card-bio {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.4;
+    margin-bottom: 12px;
+    font-style: italic;
 }
 
 .card-status {
@@ -534,8 +542,9 @@ header.header-section {
 
 .card-stats {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 12px;
+    margin-bottom: 12px;
 }
 
 .stat-item {
@@ -576,7 +585,6 @@ header.header-section {
     text-transform: uppercase;
     letter-spacing: 0.5px;
     font-weight: 500;
-    margin-top: 12px;
 }
 
 .security-badge.warning {
@@ -592,7 +600,88 @@ header.header-section {
     background: currentColor;
 }
 
-/* ====================================
+/* ===================================="
+   Card Footer & Button
+   ==================================== */
+
+.card-footer {
+    margin-top: auto;
+    padding-top: 12px;
+    border-top: 1px solid var(--border-cyan-faint);
+}
+
+.go-to-profile-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 12px 16px;
+    background: linear-gradient(135deg, rgba(0, 217, 255, 0.15), rgba(139, 92, 246, 0.1));
+    border: 2px solid var(--border-cyan);
+    border-radius: 8px;
+    color: var(--accent-cyan);
+    font-weight: 600;
+    font-size: 13px;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    position: relative;
+    overflow: hidden;
+}
+
+.go-to-profile-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(0, 217, 255, 0.2), transparent);
+    transition: left 0.5s ease;
+}
+
+.go-to-profile-btn:not(.disabled):hover {
+    background: linear-gradient(135deg, rgba(0, 217, 255, 0.25), rgba(139, 92, 246, 0.15));
+    border-color: var(--accent-cyan);
+    box-shadow: 0 0 20px rgba(0, 217, 255, 0.3), inset 0 0 20px rgba(0, 217, 255, 0.05);
+    transform: translateY(-2px);
+}
+
+.go-to-profile-btn:not(.disabled):hover::before {
+    left: 100%;
+}
+
+.go-to-profile-btn:not(.disabled):active {
+    transform: translateY(0);
+    box-shadow: 0 0 15px rgba(0, 217, 255, 0.2), inset 0 0 15px rgba(0, 217, 255, 0.08);
+}
+
+.go-to-profile-btn.disabled {
+    background: linear-gradient(135deg, rgba(255, 0, 85, 0.1), rgba(255, 0, 85, 0.05));
+    border-color: var(--neon-red);
+    color: var(--neon-red);
+    cursor: not-allowed;
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.button-icon {
+    font-size: 16px;
+    transition: transform 0.3s ease;
+}
+
+.go-to-profile-btn:not(.disabled):hover .button-icon {
+    transform: translateX(3px);
+}
+
+.button-text {
+    display: inline;
+}
+
+/* ===================================="
    Loading State
    ==================================== */
 
@@ -628,7 +717,7 @@ header.header-section {
     to { transform: rotate(360deg); }
 }
 
-/* ====================================
+/* ===================================="
    Error Message
    ==================================== */
 
@@ -647,7 +736,7 @@ header.header-section {
     display: none;
 }
 
-/* ====================================
+/* ===================================="
    Footer
    ==================================== */
 
@@ -671,7 +760,7 @@ header.header-section {
     opacity: 0.7;
 }
 
-/* ====================================
+/* ===================================="
    Responsive Design
    ==================================== */
 
@@ -708,6 +797,10 @@ header.header-section {
     .card-header {
         flex-direction: column;
     }
+
+    .card-stats {
+        grid-template-columns: repeat(3, 1fr);
+    }
 }
 
 @media (max-width: 480px) {
@@ -736,9 +829,22 @@ header.header-section {
     .warning-content {
         font-size: 13px;
     }
+
+    .go-to-profile-btn {
+        padding: 10px 14px;
+        font-size: 12px;
+    }
+
+    .button-text {
+        display: none;
+    }
+
+    .button-icon {
+        margin: 0;
+    }
 }
 
-/* ====================================
+/* ===================================="
    Utility Classes
    ==================================== */
 
