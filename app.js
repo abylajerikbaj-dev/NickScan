@@ -8,6 +8,7 @@ const appState = {
     results: {},
     isLoading: false,
     hasHighRisk: false,
+    interactions: {}, // Store likes and comments per card
 };
 
 // ============ Platform Configuration ============
@@ -70,6 +71,13 @@ const loadingSpinner = document.getElementById('loadingSpinner');
 const errorMessage = document.getElementById('errorMessage');
 const warningBanner = document.getElementById('warningBanner');
 const warningText = document.getElementById('warningText');
+const commentModal = document.getElementById('commentModal');
+const closeCommentModal = document.getElementById('closeCommentModal');
+const commentInput = document.getElementById('commentInput');
+const submitCommentBtn = document.getElementById('submitCommentBtn');
+const commentsList = document.getElementById('commentsList');
+const charCount = document.getElementById('charCount');
+const shareToast = document.getElementById('shareToast');
 
 // ============ Anti-Scam Heuristics ============
 
@@ -367,15 +375,178 @@ function getSecurityStatusDisplay(status) {
     return statusMap[status] || { label: 'Unknown', icon: '?', color: '#CCCCCC' };
 }
 
+/**
+ * Generate unique card ID
+ */
+function generateCardId(username, platformKey) {
+    return `card_${username}_${platformKey}`;
+}
+
+/**
+ * Show share toast notification
+ */
+function showShareToast() {
+    shareToast.classList.remove('hidden');
+    setTimeout(() => {
+        shareToast.classList.add('hidden');
+    }, 3000);
+}
+
+/**
+ * Copy link to clipboard
+ */
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(() => {
+        showShareToast();
+    }).catch(() => {
+        showError('Failed to copy link');
+    });
+}
+
+/**
+ * Open comment modal for a specific card
+ */
+function openCommentModal(username, platformKey) {
+    const cardId = generateCardId(username, platformKey);
+    const platformName = PLATFORMS[platformKey].name;
+    
+    // Initialize interactions if not exists
+    if (!appState.interactions[cardId]) {
+        appState.interactions[cardId] = {
+            likes: 0,
+            liked: false,
+            comments: []
+        };
+    }
+    
+    // Store current card context
+    commentModal.dataset.cardId = cardId;
+    commentModal.dataset.username = username;
+    commentModal.dataset.platform = platformKey;
+    
+    // Update modal header
+    const modalHeader = commentModal.querySelector('.comment-modal-header h3');
+    modalHeader.textContent = `${platformName} - @${username}`;
+    
+    // Reset comment input
+    commentInput.value = '';
+    charCount.textContent = '0';
+    
+    // Load comments
+    loadComments(cardId);
+    
+    // Show modal
+    commentModal.classList.remove('hidden');
+}
+
+/**
+ * Load and display comments
+ */
+function loadComments(cardId) {
+    commentsList.innerHTML = '';
+    
+    const interactions = appState.interactions[cardId];
+    if (!interactions || interactions.comments.length === 0) {
+        commentsList.innerHTML = '<div class="no-comments">No comments yet. Be the first to share!</div>';
+        return;
+    }
+    
+    interactions.comments.forEach(comment => {
+        const commentEl = document.createElement('div');
+        commentEl.className = 'comment-item';
+        commentEl.innerHTML = `
+            <div class="comment-author">Anonymous User</div>
+            <div class="comment-text">${comment.text}</div>
+            <div class="comment-timestamp">${comment.timestamp}</div>
+        `;
+        commentsList.appendChild(commentEl);
+    });
+}
+
+/**
+ * Submit a new comment
+ */
+function submitComment() {
+    const cardId = commentModal.dataset.cardId;
+    const text = commentInput.value.trim();
+    
+    if (!text) {
+        showError('Please enter a comment');
+        return;
+    }
+    
+    // Initialize if not exists
+    if (!appState.interactions[cardId]) {
+        appState.interactions[cardId] = {
+            likes: 0,
+            liked: false,
+            comments: []
+        };
+    }
+    
+    // Add comment
+    const now = new Date();
+    const timestamp = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    
+    appState.interactions[cardId].comments.push({
+        text: text,
+        timestamp: timestamp
+    });
+    
+    // Clear and reload
+    commentInput.value = '';
+    charCount.textContent = '0';
+    loadComments(cardId);
+    
+    // Visual feedback
+    submitCommentBtn.textContent = '✓ Posted';
+    setTimeout(() => {
+        submitCommentBtn.textContent = 'Post Comment';
+    }, 1500);
+}
+
+/**
+ * Toggle like for a card
+ */
+function toggleLike(cardId, button) {
+    // Initialize if not exists
+    if (!appState.interactions[cardId]) {
+        appState.interactions[cardId] = {
+            likes: 0,
+            liked: false,
+            comments: []
+        };
+    }
+    
+    const interactions = appState.interactions[cardId];
+    
+    if (interactions.liked) {
+        // Unlike
+        interactions.likes = Math.max(0, interactions.likes - 1);
+        interactions.liked = false;
+        button.classList.remove('liked');
+    } else {
+        // Like
+        interactions.likes += 1;
+        interactions.liked = true;
+        button.classList.add('liked');
+    }
+    
+    // Update button display
+    const icon = interactions.liked ? '❤️' : '🤍';
+    button.innerHTML = `<span class="interaction-icon">${icon}</span><span class="interaction-count">${interactions.likes}</span>`;
+}
+
 // ============ UI Rendering ============
 
 /**
  * Render a single platform card with dynamic data
  */
-function renderPlatformCard(platformKey, data, isHighRisk = false) {
+function renderPlatformCard(platformKey, data, username, isHighRisk = false) {
     const platform = PLATFORMS[platformKey];
     const card = document.createElement('div');
     card.className = `platform-card ${platform.className}`;
+    const cardId = generateCardId(username, platformKey);
     
     if (!data.found) {
         card.innerHTML = `
@@ -406,6 +577,19 @@ function renderPlatformCard(platformKey, data, isHighRisk = false) {
         // Determine button state based on high risk
         const buttonDisabled = isHighRisk ? 'disabled' : '';
         const buttonClass = isHighRisk ? 'go-to-profile-btn disabled' : 'go-to-profile-btn';
+        
+        // Initialize interactions if not exists
+        if (!appState.interactions[cardId]) {
+            appState.interactions[cardId] = {
+                likes: 0,
+                liked: false,
+                comments: []
+            };
+        }
+        
+        const interactions = appState.interactions[cardId];
+        const likeIcon = interactions.liked ? '❤️' : '🤍';
+        const searchUrl = `${window.location.href}?search=${encodeURIComponent(username)}&platform=${platformKey}`;
         
         card.innerHTML = `
             <div class="card-header">
@@ -446,6 +630,19 @@ function renderPlatformCard(platformKey, data, isHighRisk = false) {
                     <span>${statusDisplay.label}</span>
                 </div>
             </div>
+            <div class="card-interactions">
+                <button class="interaction-btn like-btn" data-card-id="${cardId}">
+                    <span class="interaction-icon">${likeIcon}</span>
+                    <span class="interaction-count">${interactions.likes}</span>
+                </button>
+                <button class="interaction-btn comment-btn" data-username="${data.username}" data-platform="${platformKey}">
+                    <span class="interaction-icon">💬</span>
+                    <span class="interaction-count">${interactions.comments.length}</span>
+                </button>
+                <button class="interaction-btn share-btn" data-share-url="${searchUrl}">
+                    <span class="interaction-icon">🔗</span>
+                </button>
+            </div>
             <div class="card-footer">
                 <a href="${data.profileUrl}" target="_blank" rel="noopener noreferrer" class="${buttonClass}" ${buttonDisabled}>
                     <span class="button-icon">→</span>
@@ -453,6 +650,37 @@ function renderPlatformCard(platformKey, data, isHighRisk = false) {
                 </a>
             </div>
         `;
+        
+        // Defer event listeners to after DOM insertion
+        setTimeout(() => {
+            const likeBtn = card.querySelector('.like-btn');
+            const commentBtn = card.querySelector('.comment-btn');
+            const shareBtn = card.querySelector('.share-btn');
+            
+            if (likeBtn) {
+                likeBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    toggleLike(cardId, likeBtn);
+                });
+                if (interactions.liked) {
+                    likeBtn.classList.add('liked');
+                }
+            }
+            
+            if (commentBtn) {
+                commentBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    openCommentModal(data.username, platformKey);
+                });
+            }
+            
+            if (shareBtn) {
+                shareBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    copyToClipboard(searchUrl);
+                });
+            }
+        }, 0);
     }
     
     return card;
@@ -467,7 +695,7 @@ function renderMultiPlatformResults(username, platformResults, hasHighRisk = fal
     // Create a grid of platform cards
     Object.keys(PLATFORMS).forEach(platformKey => {
         const data = platformResults[platformKey];
-        const card = renderPlatformCard(platformKey, data, hasHighRisk);
+        const card = renderPlatformCard(platformKey, data, username, hasHighRisk);
         resultsContainer.appendChild(card);
     });
 }
@@ -585,6 +813,29 @@ searchInput.addEventListener('keypress', (e) => {
     }
 });
 
+// Comment modal events
+closeCommentModal.addEventListener('click', () => {
+    commentModal.classList.add('hidden');
+});
+
+commentModal.addEventListener('click', (e) => {
+    if (e.target === commentModal) {
+        commentModal.classList.add('hidden');
+    }
+});
+
+submitCommentBtn.addEventListener('click', submitComment);
+
+commentInput.addEventListener('keyup', () => {
+    charCount.textContent = commentInput.value.length;
+});
+
+commentInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && e.ctrlKey) {
+        submitComment();
+    }
+});
+
 // ============ Initialize App ============
 
 function initializeApp() {
@@ -673,6 +924,15 @@ if (document.readyState === 'loading') {
  *    - Y2K neon glassmorphic styling
  *    - Prevents access to dangerous scam accounts
  *
+ * ✅ Community Interaction Features
+ *    - Like Button: Upvote reliable profiles
+ *    - Comment Section: Threads-style micro reviews
+ *    - Share Button: Copy search link to clipboard
+ *    - Platform-specific color matching
+ *    - Beautiful modal UI for comments
+ *    - Real-time interaction counting
+ *    - Toast notifications for sharing
+ *
  * ✅ Deterministic Randomization
  *    - Same username always generates same results
  *    - Hash-based seeding for consistency
@@ -684,6 +944,7 @@ if (document.readyState === 'loading') {
  *    - Bio preview on each card
  *    - Color-coded security badges
  *    - Responsive grid layout
+ *    - Y2K neon liquid glass effects
  *
  * ✅ Full-Featured Live Platform:
  *    - No "Not Found" messages
@@ -691,4 +952,5 @@ if (document.readyState === 'loading') {
  *    - Real engagement metrics
  *    - Advanced security analysis
  *    - Instant search results
+ *    - Community-driven verification system
  */

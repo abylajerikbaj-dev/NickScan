@@ -101,6 +101,37 @@
         </footer>
     </div>
 
+    <!-- Comment Modal -->
+    <div id="commentModal" class="comment-modal hidden">
+        <div class="comment-modal-content">
+            <div class="comment-modal-header">
+                <h3>Comments & Reviews</h3>
+                <button class="comment-modal-close" id="closeCommentModal">✕</button>
+            </div>
+            <div class="comment-modal-body">
+                <div class="comment-input-section">
+                    <textarea 
+                        id="commentInput" 
+                        class="comment-textarea" 
+                        placeholder="Share your experience or warning about this profile..."
+                        maxlength="280"
+                    ></textarea>
+                    <div class="comment-input-footer">
+                        <span class="char-count"><span id="charCount">0</span>/280</span>
+                        <button class="comment-submit-btn" id="submitCommentBtn">Post Comment</button>
+                    </div>
+                </div>
+                <div class="comments-list" id="commentsList"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Share Toast Notification -->
+    <div id="shareToast" class="share-toast hidden">
+        <span class="share-toast-icon">✓</span>
+        <span class="share-toast-text">Link copied to clipboard!</span>
+    </div>
+
     <script src="app.js"></script>
 </body>
 </html>
