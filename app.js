@@ -1,4 +1,4 @@
-/* ===================================="
+/* ====================================
    NickScan - Live Multi-Platform OSINT Search
    ==================================== */
 
@@ -10,6 +10,34 @@ const appState = {
     hasHighRisk: false,
     interactions: {}, // Store likes and comments per card
 };
+
+// ============ localStorage Management ============
+const STORAGE_KEY = 'nickscan_interactions';
+
+/**
+ * Load interactions from localStorage
+ */
+function loadInteractionsFromStorage() {
+    try {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (stored) {
+            appState.interactions = JSON.parse(stored);
+        }
+    } catch (error) {
+        console.warn('Could not load interactions from localStorage:', error);
+    }
+}
+
+/**
+ * Save interactions to localStorage
+ */
+function saveInteractionsToStorage() {
+    try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(appState.interactions));
+    } catch (error) {
+        console.warn('Could not save interactions to localStorage:', error);
+    }
+}
 
 // ============ Platform Configuration ============
 const PLATFORMS = {
@@ -417,6 +445,7 @@ function openCommentModal(username, platformKey) {
             liked: false,
             comments: []
         };
+        saveInteractionsToStorage();
     }
     
     // Store current card context
@@ -451,16 +480,30 @@ function loadComments(cardId) {
         return;
     }
     
-    interactions.comments.forEach(comment => {
+    interactions.comments.forEach((comment, index) => {
         const commentEl = document.createElement('div');
         commentEl.className = 'comment-item';
         commentEl.innerHTML = `
-            <div class="comment-author">Anonymous User</div>
-            <div class="comment-text">${comment.text}</div>
+            <div class="comment-author">Anonymous User ${index + 1}</div>
+            <div class="comment-text">${escapeHtml(comment.text)}</div>
             <div class="comment-timestamp">${comment.timestamp}</div>
         `;
         commentsList.appendChild(commentEl);
     });
+}
+
+/**
+ * Escape HTML to prevent XSS
+ */
+function escapeHtml(text) {
+    const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+    };
+    return text.replace(/[&<>"']/g, m => map[m]);
 }
 
 /**
@@ -484,7 +527,7 @@ function submitComment() {
         };
     }
     
-    // Add comment
+    // Add comment with timestamp
     const now = new Date();
     const timestamp = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     
@@ -493,15 +536,27 @@ function submitComment() {
         timestamp: timestamp
     });
     
-    // Clear and reload
+    // Save to localStorage
+    saveInteractionsToStorage();
+    
+    // Clear input
     commentInput.value = '';
     charCount.textContent = '0';
+    
+    // Reload comments to display the new one
     loadComments(cardId);
+    
+    // Scroll to bottom to show new comment
+    setTimeout(() => {
+        commentsList.scrollTop = commentsList.scrollHeight;
+    }, 100);
     
     // Visual feedback
     submitCommentBtn.textContent = '✓ Posted';
+    submitCommentBtn.classList.add('posted');
     setTimeout(() => {
         submitCommentBtn.textContent = 'Post Comment';
+        submitCommentBtn.classList.remove('posted');
     }, 1500);
 }
 
@@ -531,6 +586,9 @@ function toggleLike(cardId, button) {
         interactions.liked = true;
         button.classList.add('liked');
     }
+    
+    // Save to localStorage
+    saveInteractionsToStorage();
     
     // Update button display
     const icon = interactions.liked ? '❤️' : '🤍';
@@ -839,6 +897,9 @@ commentInput.addEventListener('keydown', (e) => {
 // ============ Initialize App ============
 
 function initializeApp() {
+    // Load interactions from localStorage
+    loadInteractionsFromStorage();
+    
     // Update system info
     document.getElementById('systemInfo').textContent = getSystemInfo();
     document.getElementById('userInfo').textContent = 'Guest User';
@@ -871,7 +932,7 @@ if (document.readyState === 'loading') {
     initializeApp();
 }
 
-/* ===================================="
+/* ====================================
    Features Summary - NOW LIVE!
    ==================================== */
 
@@ -945,6 +1006,15 @@ if (document.readyState === 'loading') {
  *    - Color-coded security badges
  *    - Responsive grid layout
  *    - Y2K neon liquid glass effects
+ *
+ * ✅ Persistent Comment System
+ *    - Comments persist using localStorage
+ *    - Immediately displayed after submission
+ *    - Auto-scroll to new comments
+ *    - Character count display (0/280)
+ *    - Textarea clears after posting
+ *    - Comment counter updates in real-time
+ *    - Session-persistent comments
  *
  * ✅ Full-Featured Live Platform:
  *    - No "Not Found" messages
