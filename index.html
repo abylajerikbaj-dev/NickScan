@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NickScan - Username Intelligence Platform</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header with User System Info -->
+        <header class="header-section">
+            <div class="header-content">
+                <div class="brand">
+                    <h1>NickScan</h1>
+                    <span class="brand-tagline">Username Intelligence</span>
+                </div>
+                <div class="user-info-bar">
+                    <div class="system-info">
+                        <span class="info-item">
+                            <span class="info-label">System:</span>
+                            <span class="info-value" id="systemInfo">Loading...</span>
+                        </span>
+                        <span class="info-separator">•</span>
+                        <span class="info-item">
+                            <span class="info-label">User:</span>
+                            <span class="info-value" id="userInfo">Guest</span>
+                        </span>
+                        <span class="info-separator">•</span>
+                        <span class="info-item">
+                            <span class="info-label">Time:</span>
+                            <span class="info-value" id="timeInfo">--:--</span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Search Section -->
+            <section class="search-section">
+                <div class="search-container">
+                    <div class="search-input-wrapper">
+                        <input 
+                            type="text" 
+                            id="searchInput" 
+                            class="search-input" 
+                            placeholder="Search @username or Phone number..."
+                            autocomplete="off"
+                        >
+                        <button class="search-button" id="searchBtn">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <path d="m21 21-4.35-4.35"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="search-hints">
+                        <span class="hint">Try: @john_doe</span>
+                        <span class="hint">or: 555-123-4567</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Anti-Scam Warning Banner (Hidden by default) -->
+            <section id="warningBanner" class="warning-banner hidden">
+                <div class="warning-content">
+                    <span class="warning-icon">⚠️</span>
+                    <span class="warning-text">CRITICAL WARNING: This account has 5+ reported scam complaints.</span>
+                </div>
+            </section>
+
+            <!-- Results Section -->
+            <section class="results-section">
+                <div id="resultsContainer" class="results-container">
+                    <div class="empty-state">
+                        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <path d="m21 21-4.35-4.35"></path>
+                        </svg>
+                        <p>Start by searching for a username or phone number</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Loading State -->
+            <div id="loadingSpinner" class="loading-spinner hidden">
+                <div class="spinner"></div>
+                <p>Scanning database...</p>
+            </div>
+
+            <!-- Error State -->
+            <div id="errorMessage" class="error-message hidden"></div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer-section">
+            <p>&copy; 2026 NickScan. Cyber Intelligence Platform. All rights reserved.</p>
+            <p class="footer-note">This tool is for educational and verification purposes only.</p>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
