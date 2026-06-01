@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NickScan - Username Intelligence Platform</title>
+    <title>NickScan - Multi-Platform OSINT Search</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -13,7 +13,7 @@
             <div class="header-content">
                 <div class="brand">
                     <h1>NickScan</h1>
-                    <span class="brand-tagline">Username Intelligence</span>
+                    <span class="brand-tagline">Multi-Platform OSINT Intelligence</span>
                 </div>
                 <div class="user-info-bar">
                     <div class="system-info">
@@ -46,7 +46,7 @@
                             type="text" 
                             id="searchInput" 
                             class="search-input" 
-                            placeholder="Search @username or Phone number..."
+                            placeholder="Search @username across all platforms..."
                             autocomplete="off"
                         >
                         <button class="search-button" id="searchBtn">
@@ -58,7 +58,7 @@
                     </div>
                     <div class="search-hints">
                         <span class="hint">Try: @john_doe</span>
-                        <span class="hint">or: 555-123-4567</span>
+                        <span class="hint">Searches: Telegram, Instagram, Threads, X, ДругВокруг, ВКонтакте</span>
                     </div>
                 </div>
             </section>
@@ -67,7 +67,7 @@
             <section id="warningBanner" class="warning-banner hidden">
                 <div class="warning-content">
                     <span class="warning-icon">⚠️</span>
-                    <span class="warning-text">CRITICAL WARNING: This account has 5+ reported scam complaints.</span>
+                    <span class="warning-text" id="warningText">CRITICAL WARNING: This account has been reported on multiple platforms.</span>
                 </div>
             </section>
 
@@ -79,7 +79,7 @@
                             <circle cx="11" cy="11" r="8"></circle>
                             <path d="m21 21-4.35-4.35"></path>
                         </svg>
-                        <p>Start by searching for a username or phone number</p>
+                        <p>Enter a username to search across all platforms simultaneously</p>
                     </div>
                 </div>
             </section>
@@ -87,7 +87,7 @@
             <!-- Loading State -->
             <div id="loadingSpinner" class="loading-spinner hidden">
                 <div class="spinner"></div>
-                <p>Scanning database...</p>
+                <p>Scanning all platforms...</p>
             </div>
 
             <!-- Error State -->
@@ -96,7 +96,7 @@
 
         <!-- Footer -->
         <footer class="footer-section">
-            <p>&copy; 2026 NickScan. Cyber Intelligence Platform. All rights reserved.</p>
+            <p>&copy; 2026 NickScan. Multi-Platform OSINT Intelligence. All rights reserved.</p>
             <p class="footer-note">This tool is for educational and verification purposes only.</p>
         </footer>
     </div>

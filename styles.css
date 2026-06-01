@@ -1,5 +1,6 @@
 /* ====================================
    NickScan - Cyber Dark Glassmorphism
+   Multi-Platform OSINT Search
    ==================================== */
 
 * {
@@ -9,7 +10,7 @@
 }
 
 :root {
-    /* Color Palette */
+    /* Base Color Palette */
     --bg-primary: #090D16;
     --bg-secondary: #0F1524;
     --glass-light: rgba(15, 21, 36, 0.6);
@@ -25,6 +26,20 @@
     --accent-cyan: #00D9FF;
     --accent-purple: #8B5CF6;
     --accent-green: #10B981;
+    
+    /* Platform Colors */
+    --telegram-blue: #0088cc;
+    --telegram-blue-light: #1DADE1;
+    --instagram-gradient-1: #fd1d1d;
+    --instagram-gradient-2: #f77737;
+    --instagram-gradient-3: #feda75;
+    --threads-black: #000000;
+    --threads-white: #FFFFFF;
+    --x-black: #000000;
+    --x-white: #FFFFFF;
+    --drugaround-purple: #8B5CF6;
+    --vk-blue: #0077FF;
+    --vk-blue-dark: #0055CC;
     
     /* Typography */
     --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
@@ -65,7 +80,7 @@ header.header-section {
 }
 
 .header-content {
-    max-width: 1200px;
+    max-width: 1400px;
     margin: 0 auto;
     display: flex;
     justify-content: space-between;
@@ -135,7 +150,7 @@ header.header-section {
 
 .main-content {
     flex: 1;
-    max-width: 1200px;
+    max-width: 1400px;
     width: 100%;
     margin: 0 auto;
     padding: 32px 20px;
@@ -280,7 +295,7 @@ header.header-section {
 }
 
 /* ====================================
-   Results Section
+   Results Section - Grid Layout
    ==================================== */
 
 .results-section {
@@ -289,9 +304,9 @@ header.header-section {
 }
 
 .results-container {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 20px;
     animation: fadeIn 0.4s ease;
 }
 
@@ -309,6 +324,7 @@ header.header-section {
     padding: 60px 20px;
     color: var(--text-tertiary);
     text-align: center;
+    grid-column: 1 / -1;
 }
 
 .empty-state svg {
@@ -321,23 +337,39 @@ header.header-section {
 }
 
 /* ====================================
-   Account Card (Threads-style)
+   Platform Card
    ==================================== */
 
-.account-card {
+.platform-card {
     background: var(--glass-light);
     backdrop-filter: blur(10px);
-    border: 1px solid var(--border-cyan-faint);
+    border: 2px solid var(--border-cyan-faint);
     border-radius: 12px;
     padding: 20px;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     animation: slideDown 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+}
+
+.platform-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--platform-color, var(--border-cyan));
+    opacity: 0.6;
 }
 
 @keyframes slideDown {
     from {
         opacity: 0;
-        transform: translateY(-10px);
+        transform: translateY(10px);
     }
     to {
         opacity: 1;
@@ -345,10 +377,43 @@ header.header-section {
     }
 }
 
-.account-card:hover {
+.platform-card:hover {
     background: var(--glass-dark);
-    border-color: var(--border-cyan-active);
-    box-shadow: 0 8px 32px rgba(0, 217, 255, 0.1);
+    border-color: var(--platform-color, var(--border-cyan));
+    box-shadow: 0 8px 32px var(--platform-glow, rgba(0, 217, 255, 0.1));
+    transform: translateY(-4px);
+}
+
+/* Platform-specific styling */
+
+.platform-card.telegram {
+    --platform-color: var(--telegram-blue);
+    --platform-glow: rgba(0, 136, 204, 0.2);
+}
+
+.platform-card.instagram {
+    --platform-color: #fd1d1d;
+    --platform-glow: rgba(253, 29, 29, 0.2);
+}
+
+.platform-card.threads {
+    --platform-color: var(--text-primary);
+    --platform-glow: rgba(230, 233, 240, 0.1);
+}
+
+.platform-card.x {
+    --platform-color: #000000;
+    --platform-glow: rgba(0, 0, 0, 0.1);
+}
+
+.platform-card.drugaround {
+    --platform-color: var(--drugaround-purple);
+    --platform-glow: rgba(139, 92, 246, 0.2);
+}
+
+.platform-card.vk {
+    --platform-color: var(--vk-blue);
+    --platform-glow: rgba(0, 119, 255, 0.2);
 }
 
 .card-header {
@@ -356,11 +421,34 @@ header.header-section {
     justify-content: space-between;
     align-items: flex-start;
     margin-bottom: 16px;
+    gap: 12px;
+}
+
+.card-platform-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    background: rgba(var(--platform-rgb), 0.15);
+    border: 1px solid var(--platform-color);
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--platform-color);
+    white-space: nowrap;
+}
+
+.platform-icon {
+    font-size: 16px;
 }
 
 .card-user-info {
     display: flex;
     gap: 12px;
+    flex: 1;
+    min-width: 0;
 }
 
 .card-avatar {
@@ -368,7 +456,7 @@ header.header-section {
     height: 48px;
     border-radius: 50%;
     background: linear-gradient(135deg, rgba(0, 217, 255, 0.2), rgba(139, 92, 246, 0.2));
-    border: 2px solid var(--border-cyan-faint);
+    border: 2px solid var(--platform-color);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -380,55 +468,26 @@ header.header-section {
     display: flex;
     flex-direction: column;
     gap: 4px;
+    min-width: 0;
+    flex: 1;
 }
 
 .card-username {
     font-size: 15px;
     font-weight: 600;
     color: var(--text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .card-handle {
-    font-size: 13px;
+    font-size: 12px;
     color: var(--text-tertiary);
     font-family: var(--font-mono);
-}
-
-.card-badge {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 12px;
-    background: rgba(16, 185, 129, 0.1);
-    border: 1px solid rgba(16, 185, 129, 0.3);
-    border-radius: 6px;
-    font-size: 11px;
-    color: var(--accent-green);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    font-weight: 500;
-}
-
-.card-badge.new-account {
-    background: rgba(255, 0, 85, 0.1);
-    border-color: rgba(255, 0, 85, 0.3);
-    color: var(--neon-red);
-}
-
-.badge-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: currentColor;
-}
-
-.badge-dot.warning {
-    animation: pulse-dot 1.5s ease-in-out infinite;
-}
-
-@keyframes pulse-dot {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.4; }
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 /* ====================================
@@ -437,103 +496,100 @@ header.header-section {
 
 .card-content {
     margin-bottom: 16px;
-    padding: 12px;
-    background: rgba(9, 13, 22, 0.3);
-    border-radius: 8px;
-    border: 1px solid var(--border-cyan-faint);
+    flex: 1;
 }
 
-.card-bio {
-    font-size: 13px;
-    color: var(--text-secondary);
-    line-height: 1.6;
+.card-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    border-radius: 6px;
+    font-size: 12px;
+    color: var(--accent-green);
+    margin-bottom: 12px;
+    font-weight: 500;
+}
+
+.card-status.inactive {
+    background: rgba(255, 0, 85, 0.1);
+    border-color: rgba(255, 0, 85, 0.3);
+    color: var(--neon-red);
+}
+
+.status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    animation: pulse-dot 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
 }
 
 .card-stats {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 12px;
-    margin-top: 12px;
 }
 
 .stat-item {
     display: flex;
     flex-direction: column;
     gap: 4px;
-    text-align: center;
     padding: 8px;
     background: rgba(0, 217, 255, 0.05);
+    border: 1px solid var(--border-cyan-faint);
     border-radius: 6px;
+    text-align: center;
 }
 
 .stat-value {
-    font-size: 16px;
+    font-size: 14px;
     font-weight: 700;
-    color: var(--accent-cyan);
+    color: var(--platform-color);
     font-family: var(--font-mono);
 }
 
 .stat-label {
-    font-size: 11px;
+    font-size: 10px;
     color: var(--text-tertiary);
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
 
-/* ====================================
-   Action Bar
-   ==================================== */
-
-.card-actions {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    flex-wrap: wrap;
-}
-
-.action-button {
+.security-badge {
     display: flex;
     align-items: center;
     gap: 6px;
     padding: 6px 10px;
-    background: rgba(0, 217, 255, 0.08);
-    border: 1px solid var(--border-cyan-faint);
+    background: rgba(139, 92, 246, 0.1);
+    border: 1px solid rgba(139, 92, 246, 0.3);
     border-radius: 6px;
-    color: var(--text-secondary);
-    font-size: 12px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    font-family: var(--font-mono);
-    font-weight: 500;
-    white-space: nowrap;
-}
-
-.action-button:hover {
-    background: rgba(0, 217, 255, 0.15);
-    border-color: var(--border-cyan-active);
-    color: var(--accent-cyan);
-}
-
-.action-button:active {
-    transform: scale(0.95);
-}
-
-.action-button svg {
-    width: 14px;
-    height: 14px;
-    stroke: currentColor;
-    fill: none;
-    stroke-width: 2;
-}
-
-.action-button.filled svg {
-    fill: currentColor;
-}
-
-.action-count {
     font-size: 11px;
-    font-weight: 600;
-    color: var(--accent-cyan);
+    color: var(--accent-purple);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 500;
+    margin-top: 12px;
+}
+
+.security-badge.warning {
+    background: rgba(255, 0, 85, 0.1);
+    border-color: rgba(255, 0, 85, 0.3);
+    color: var(--neon-red);
+}
+
+.badge-icon {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: currentColor;
 }
 
 /* ====================================
@@ -619,6 +675,12 @@ header.header-section {
    Responsive Design
    ==================================== */
 
+@media (max-width: 1200px) {
+    .results-container {
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    }
+}
+
 @media (max-width: 768px) {
     .header-content {
         flex-direction: column;
@@ -639,26 +701,12 @@ header.header-section {
         padding: 20px 16px;
     }
 
+    .results-container {
+        grid-template-columns: 1fr;
+    }
+
     .card-header {
         flex-direction: column;
-    }
-
-    .card-badge {
-        align-self: flex-start;
-    }
-
-    .card-stats {
-        grid-template-columns: repeat(2, 1fr);
-    }
-
-    .action-button {
-        flex: 1;
-        justify-content: center;
-        min-width: 70px;
-    }
-
-    .card-actions {
-        justify-content: space-between;
     }
 }
 
@@ -683,11 +731,6 @@ header.header-section {
 
     .card-stats {
         grid-template-columns: 1fr;
-    }
-
-    .action-button {
-        padding: 5px 8px;
-        font-size: 11px;
     }
 
     .warning-content {

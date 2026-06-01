@@ -1,12 +1,52 @@
 /* ====================================
-   NickScan - App Logic
+   NickScan - Multi-Platform OSINT Search
    ==================================== */
 
 // ============ State Management ============
 const appState = {
     currentSearch: null,
-    results: [],
+    results: {},
     isLoading: false,
+};
+
+// ============ Platform Configuration ============
+const PLATFORMS = {
+    telegram: {
+        name: 'Telegram',
+        icon: '✈️',
+        color: '#0088cc',
+        className: 'telegram'
+    },
+    instagram: {
+        name: 'Instagram',
+        icon: '📷',
+        color: '#fd1d1d',
+        className: 'instagram'
+    },
+    threads: {
+        name: 'Threads',
+        icon: '🧵',
+        color: '#000000',
+        className: 'threads'
+    },
+    x: {
+        name: 'X (Twitter)',
+        icon: '𝕏',
+        color: '#000000',
+        className: 'x'
+    },
+    drugaround: {
+        name: 'ДругВокруг',
+        icon: '🌍',
+        color: '#8B5CF6',
+        className: 'drugaround'
+    },
+    vk: {
+        name: 'ВКонтакте',
+        icon: '🔷',
+        color: '#0077FF',
+        className: 'vk'
+    }
 };
 
 // ============ DOM Elements ============
@@ -16,124 +56,192 @@ const resultsContainer = document.getElementById('resultsContainer');
 const loadingSpinner = document.getElementById('loadingSpinner');
 const errorMessage = document.getElementById('errorMessage');
 const warningBanner = document.getElementById('warningBanner');
+const warningText = document.getElementById('warningText');
 
-// ============ Simulated Database ============
-// This is mock data for demonstration purposes
-const accountDatabase = {
+// ============ Simulated Multi-Platform Database ============
+const multiPlatformDatabase = {
     '@john_doe': {
-        name: 'John Doe',
-        handle: '@john_doe',
-        bio: 'Software engineer, coffee enthusiast, and tech blogger. Always learning, always growing.',
-        avatar: '👨‍💻',
-        followers: 2847,
-        following: 342,
-        posts: 1203,
-        joinDate: new Date('2018-03-15'),
-        isScam: false,
+        telegram: {
+            found: true,
+            username: '@john_doe',
+            followers: 2847,
+            isActive: true,
+            securityStatus: 'verified',
+            joinDate: new Date('2018-03-15'),
+            isScam: false
+        },
+        instagram: {
+            found: true,
+            username: 'john_doe',
+            followers: 1543,
+            isActive: true,
+            securityStatus: 'verified',
+            joinDate: new Date('2017-08-22'),
+            isScam: false
+        },
+        threads: {
+            found: true,
+            username: 'john_doe',
+            followers: 892,
+            isActive: true,
+            securityStatus: 'safe',
+            joinDate: new Date('2023-07-08'),
+            isScam: false
+        },
+        x: {
+            found: true,
+            username: '@john_doe',
+            followers: 3421,
+            isActive: true,
+            securityStatus: 'verified',
+            joinDate: new Date('2012-05-15'),
+            isScam: false
+        },
+        drugaround: {
+            found: true,
+            username: 'john_doe',
+            followers: 156,
+            isActive: false,
+            securityStatus: 'inactive',
+            joinDate: new Date('2015-11-03'),
+            isScam: false
+        },
+        vk: {
+            found: true,
+            username: 'john_doe',
+            followers: 2103,
+            isActive: true,
+            securityStatus: 'safe',
+            joinDate: new Date('2008-12-20'),
+            isScam: false
+        }
     },
     '@alice_smith': {
-        name: 'Alice Smith',
-        handle: '@alice_smith',
-        bio: 'Digital marketer | Designer | Content creator. Building something awesome every day.',
-        avatar: '👩‍🎨',
-        followers: 5234,
-        following: 876,
-        posts: 3421,
-        joinDate: new Date('2019-07-22'),
-        isScam: false,
+        telegram: {
+            found: true,
+            username: '@alice_smith',
+            followers: 5234,
+            isActive: true,
+            securityStatus: 'verified',
+            joinDate: new Date('2019-07-22'),
+            isScam: false
+        },
+        instagram: {
+            found: true,
+            username: 'alice_smith',
+            followers: 12543,
+            isActive: true,
+            securityStatus: 'verified',
+            joinDate: new Date('2016-03-10'),
+            isScam: false
+        },
+        threads: {
+            found: true,
+            username: 'alice_smith',
+            followers: 4521,
+            isActive: true,
+            securityStatus: 'safe',
+            joinDate: new Date('2023-08-01'),
+            isScam: false
+        },
+        x: {
+            found: true,
+            username: '@alice_smith',
+            followers: 8934,
+            isActive: true,
+            securityStatus: 'verified',
+            joinDate: new Date('2014-02-28'),
+            isScam: false
+        },
+        drugaround: {
+            found: false,
+            username: null,
+            followers: 0,
+            isActive: false,
+            securityStatus: 'not_found',
+            joinDate: null,
+            isScam: false
+        },
+        vk: {
+            found: true,
+            username: 'alice_smith',
+            followers: 6847,
+            isActive: true,
+            securityStatus: 'safe',
+            joinDate: new Date('2010-09-15'),
+            isScam: false
+        }
     },
     '@crypto_bro_2020': {
-        name: 'Crypto Bro',
-        handle: '@crypto_bro_2020',
-        bio: 'Get rich quick with our guaranteed investment scheme. DM for details!',
-        avatar: '💰',
-        followers: 342,
-        following: 5000,
-        posts: 8932,
-        joinDate: new Date('2024-11-10'),
-        isScam: true, // This account is flagged as scam
-    },
-    '@sarah_developer': {
-        name: 'Sarah Developer',
-        handle: '@sarah_developer',
-        bio: 'Full-stack developer | React & Node.js lover | Open source contributor',
-        avatar: '👩‍💻',
-        followers: 1893,
-        following: 457,
-        posts: 892,
-        joinDate: new Date('2020-05-08'),
-        isScam: false,
-    },
-    '@techguru_official': {
-        name: 'Tech Guru',
-        handle: '@techguru_official',
-        bio: 'Sharing tech tips and productivity hacks. New here, ready to learn!',
-        avatar: '🧠',
-        followers: 45,
-        following: 234,
-        posts: 12,
-        joinDate: new Date('2025-12-20'),
-        isScam: false,
-    },
-    '555-123-4567': {
-        name: 'Phone Lookup',
-        handle: '+1-555-123-4567',
-        bio: 'Phone number associated with multiple platform accounts.',
-        avatar: '📱',
-        followers: 0,
-        following: 0,
-        posts: 0,
-        joinDate: new Date('2022-01-01'),
-        isScam: false,
-    },
-    '555-987-6543': {
-        name: 'Suspicious Number',
-        handle: '+1-555-987-6543',
-        bio: 'Phone associated with fraudulent activities.',
-        avatar: '⚠️',
-        followers: 0,
-        following: 0,
-        posts: 0,
-        joinDate: new Date('2024-09-15'),
-        isScam: true,
-    },
+        telegram: {
+            found: true,
+            username: '@crypto_bro_2020',
+            followers: 342,
+            isActive: true,
+            securityStatus: 'suspicious',
+            joinDate: new Date('2024-11-10'),
+            isScam: true
+        },
+        instagram: {
+            found: true,
+            username: 'crypto_bro_2020',
+            followers: 512,
+            isActive: true,
+            securityStatus: 'suspicious',
+            joinDate: new Date('2024-10-15'),
+            isScam: true
+        },
+        threads: {
+            found: true,
+            username: 'crypto_bro_2020',
+            followers: 187,
+            isActive: true,
+            securityStatus: 'suspicious',
+            joinDate: new Date('2024-11-01'),
+            isScam: true
+        },
+        x: {
+            found: true,
+            username: '@crypto_bro_2020',
+            followers: 234,
+            isActive: true,
+            securityStatus: 'suspicious',
+            joinDate: new Date('2024-09-20'),
+            isScam: true
+        },
+        drugaround: {
+            found: false,
+            username: null,
+            followers: 0,
+            isActive: false,
+            securityStatus: 'not_found',
+            joinDate: null,
+            isScam: false
+        },
+        vk: {
+            found: true,
+            username: 'crypto_bro_2020',
+            followers: 298,
+            isActive: true,
+            securityStatus: 'suspicious',
+            joinDate: new Date('2024-10-05'),
+            isScam: true
+        }
+    }
 };
 
 // ============ Utility Functions ============
 
 /**
- * Format date to readable format (e.g., "Joined: Jan 2020")
+ * Format date to readable format (e.g., "Jan 2020")
  */
 function formatJoinDate(date) {
+    if (!date) return 'N/A';
     const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
                        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const month = monthNames[date.getMonth()];
     const year = date.getFullYear();
-    return `Joined: ${month} ${year}`;
-}
-
-/**
- * Calculate account age in days
- */
-function getAccountAge(joinDate) {
-    const now = new Date();
-    const diffTime = now - joinDate;
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays;
-}
-
-/**
- * Check if account is new (less than 30 days old)
- */
-function isNewAccount(joinDate) {
-    return getAccountAge(joinDate) < 30;
-}
-
-/**
- * Normalize search input
- */
-function normalizeSearch(input) {
-    return input.trim().toLowerCase();
+    return `${month} ${year}`;
 }
 
 /**
@@ -144,11 +252,17 @@ function formatNumber(num) {
 }
 
 /**
+ * Normalize search input
+ */
+function normalizeSearch(input) {
+    return input.trim().toLowerCase();
+}
+
+/**
  * Get system information
  */
 function getSystemInfo() {
     const userAgent = navigator.userAgent;
-    const platform = navigator.platform;
     
     let os = 'Unknown';
     if (userAgent.indexOf('Win') > -1) os = 'Windows';
@@ -171,111 +285,118 @@ function updateTime() {
     document.getElementById('timeInfo').textContent = `${hours}:${minutes}`;
 }
 
+/**
+ * Get security status display
+ */
+function getSecurityStatusDisplay(status) {
+    const statusMap = {
+        'verified': { label: 'Verified', icon: '✓' },
+        'safe': { label: 'Safe', icon: '✓' },
+        'suspicious': { label: 'Suspicious', icon: '⚠' },
+        'inactive': { label: 'Inactive', icon: '◯' },
+        'not_found': { label: 'Not Found', icon: '✗' }
+    };
+    return statusMap[status] || { label: 'Unknown', icon: '?' };
+}
+
 // ============ UI Rendering ============
 
 /**
- * Render a single account card
+ * Render a single platform card
  */
-function renderAccountCard(account) {
-    const joinDate = account.joinDate;
-    const isNew = isNewAccount(joinDate);
-    const badgeText = formatJoinDate(joinDate);
-    
+function renderPlatformCard(platformKey, data) {
+    const platform = PLATFORMS[platformKey];
     const card = document.createElement('div');
-    card.className = 'account-card';
+    card.className = `platform-card ${platform.className}`;
     
-    card.innerHTML = `
-        <div class="card-header">
-            <div class="card-user-info">
-                <div class="card-avatar">${account.avatar}</div>
-                <div class="card-user-details">
-                    <div class="card-username">${account.name}</div>
-                    <div class="card-handle">${account.handle}</div>
+    if (!data.found) {
+        card.innerHTML = `
+            <div class="card-header">
+                <div class="card-user-info">
+                    <div class="card-avatar">${platform.icon}</div>
+                    <div class="card-user-details">
+                        <div class="card-username">${platform.name}</div>
+                        <div class="card-handle">Not Found</div>
+                    </div>
+                </div>
+                <div class="card-platform-badge">
+                    <span class="platform-icon">${platform.icon}</span>
+                    <span>${platform.name}</span>
                 </div>
             </div>
-            <div class="card-badge ${isNew ? 'new-account' : ''}">
-                ${isNew ? '<span class="badge-dot warning"></span>' : '<span class="badge-dot"></span>'}
-                <span>${badgeText}</span>
-            </div>
-        </div>
-
-        <div class="card-content">
-            <div class="card-bio">${account.bio}</div>
-            <div class="card-stats">
-                <div class="stat-item">
-                    <div class="stat-value">${formatNumber(account.followers)}</div>
-                    <div class="stat-label">Followers</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value">${formatNumber(account.following)}</div>
-                    <div class="stat-label">Following</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value">${formatNumber(account.posts)}</div>
-                    <div class="stat-label">Posts</div>
+            <div class="card-content">
+                <div class="card-status inactive">
+                    <span class="status-dot"></span>
+                    <span>No account found on this platform</span>
                 </div>
             </div>
-        </div>
-
-        <div class="card-actions">
-            <button class="action-button">
-                <svg viewBox="0 0 24 24">
-                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                </svg>
-                <span class="action-count">7</span>
-            </button>
-            <button class="action-button">
-                <svg viewBox="0 0 24 24">
-                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                </svg>
-                <span class="action-count">5</span>
-            </button>
-            <button class="action-button">
-                <svg viewBox="0 0 24 24">
-                    <path d="M17 1l4 4m0 0l-4 4M21 5H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2z"></path>
-                </svg>
-            </button>
-            <button class="action-button">
-                <svg viewBox="0 0 24 24">
-                    <path d="M22 2L11 13m11-11L2 22m19-11v6h-6"></path>
-                </svg>
-            </button>
-        </div>
-    `;
+        `;
+    } else {
+        const statusDisplay = getSecurityStatusDisplay(data.securityStatus);
+        const isScamClass = data.isScam ? 'warning' : '';
+        
+        card.innerHTML = `
+            <div class="card-header">
+                <div class="card-user-info">
+                    <div class="card-avatar">${platform.icon}</div>
+                    <div class="card-user-details">
+                        <div class="card-username">${platform.name}</div>
+                        <div class="card-handle">${data.username || 'N/A'}</div>
+                    </div>
+                </div>
+                <div class="card-platform-badge">
+                    <span class="platform-icon">${platform.icon}</span>
+                    <span>${platform.name}</span>
+                </div>
+            </div>
+            <div class="card-content">
+                <div class="card-status ${!data.isActive ? 'inactive' : ''}">
+                    <span class="status-dot"></span>
+                    <span>${data.isActive ? 'Active' : 'Inactive'}</span>
+                </div>
+                <div class="card-stats">
+                    <div class="stat-item">
+                        <div class="stat-value">${formatNumber(data.followers)}</div>
+                        <div class="stat-label">Followers</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">${formatJoinDate(data.joinDate)}</div>
+                        <div class="stat-label">Joined</div>
+                    </div>
+                </div>
+                <div class="security-badge ${isScamClass}">
+                    <span class="badge-icon"></span>
+                    <span>${statusDisplay.label}</span>
+                </div>
+            </div>
+        `;
+    }
     
     return card;
 }
 
 /**
- * Render all results
+ * Render all platform results
  */
-function renderResults(accounts) {
+function renderMultiPlatformResults(username, platformResults) {
     resultsContainer.innerHTML = '';
     
-    if (accounts.length === 0) {
-        resultsContainer.innerHTML = `
-            <div class="empty-state">
-                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
-                    <circle cx="11" cy="11" r="8"></circle>
-                    <path d="m21 21-4.35-4.35"></path>
-                </svg>
-                <p>No results found. Try a different search.</p>
-            </div>
-        `;
-        return;
-    }
-    
-    accounts.forEach(account => {
-        const card = renderAccountCard(account);
+    // Create a grid of platform cards
+    Object.keys(PLATFORMS).forEach(platformKey => {
+        const data = platformResults[platformKey];
+        const card = renderPlatformCard(platformKey, data);
         resultsContainer.appendChild(card);
     });
 }
 
 /**
- * Show warning banner
+ * Show warning banner with custom message
  */
-function showWarningBanner(show = true) {
+function showWarningBanner(show = true, message = null) {
     if (show) {
+        if (message) {
+            warningText.textContent = message;
+        }
         warningBanner.classList.remove('hidden');
     } else {
         warningBanner.classList.add('hidden');
@@ -309,13 +430,13 @@ function showError(message) {
 // ============ Search Logic ============
 
 /**
- * Search for an account by username or phone
+ * Search for account across all platforms
  */
-function searchAccount(query) {
+function searchMultiPlatform(query) {
     const normalized = normalizeSearch(query);
     
     if (!normalized) {
-        showError('Please enter a search term');
+        showError('Please enter a username to search');
         return;
     }
     
@@ -325,25 +446,41 @@ function searchAccount(query) {
     setTimeout(() => {
         setLoading(false);
         
-        // Check if query matches any account
-        const account = accountDatabase[normalized] || 
-                       accountDatabase[query.toLowerCase()];
+        // Look up the username in the database
+        const userKey = Object.keys(multiPlatformDatabase).find(key => 
+            key.toLowerCase() === normalized || key.toLowerCase().includes(normalized)
+        );
         
-        if (account) {
-            appState.currentSearch = account;
-            appState.results = [account];
+        if (userKey) {
+            const platformResults = multiPlatformDatabase[userKey];
+            appState.currentSearch = userKey;
+            appState.results = platformResults;
             
-            // Show warning if account is flagged as scam
-            showWarningBanner(account.isScam);
+            // Check if any platform flagged as scam
+            const hasScam = Object.values(platformResults).some(data => data.isScam);
+            if (hasScam) {
+                showWarningBanner(true, 
+                    '⚠️ CRITICAL WARNING: This account has been reported on multiple platforms with suspicious activity.');
+            } else {
+                showWarningBanner(false);
+            }
             
-            renderResults(appState.results);
+            renderMultiPlatformResults(userKey, platformResults);
             searchInput.value = '';
         } else {
             showWarningBanner(false);
-            renderResults([]); // Empty results
-            showError(`No account found for "${query}". Try searching for @john_doe or @alice_smith`);
+            resultsContainer.innerHTML = `
+                <div class="empty-state">
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <path d="m21 21-4.35-4.35"></path>
+                    </svg>
+                    <p>No accounts found for "${query}". Try @john_doe or @alice_smith</p>
+                </div>
+            `;
+            showError(`No results found for "${query}" across any platform.`);
         }
-    }, 800);
+    }, 1200);
 }
 
 /**
@@ -351,7 +488,7 @@ function searchAccount(query) {
  */
 function handleSearch() {
     const query = searchInput.value;
-    searchAccount(query);
+    searchMultiPlatform(query);
 }
 
 // ============ Event Listeners ============
@@ -392,61 +529,63 @@ if (document.readyState === 'loading') {
    ==================================== */
 
 /*
- * ✅ Cyber-Dark Glassmorphism UI
- *    - #090D16 background with gradient
- *    - Translucent glass cards with blur effect
- *    - Ultra-thin cyan neon borders
- *    - Smooth animations and transitions
+ * ✅ Multi-Platform OSINT Search
+ *    - Searches 6 platforms simultaneously:
+ *      • Telegram
+ *      • Instagram
+ *      • Threads
+ *      • X (Twitter)
+ *      • ДругВокруг
+ *      • ВКонтакте
  *
- * ✅ Threads-Style Layout
- *    - Minimalist and clean design
- *    - High-density information display
- *    - Card-based result layout
- *    - Action buttons tightly packed
+ * ✅ Platform-Specific Branding
+ *    - Each platform has its own color scheme
+ *    - Custom icons for visual identification
+ *    - Dedicated card layout per platform
+ *    - Platform badges with brand colors
  *
- * ✅ User System Info Row
- *    - Displays OS (Windows, macOS, Linux, etc.)
- *    - Shows "Guest User" as placeholder
- *    - Real-time clock display
+ * ✅ Beautiful Grid Layout
+ *    - Responsive multi-card grid
+ *    - Cards display platform info, followers, join date
+ *    - Platform-specific neon colors
+ *    - Glassmorphism design with cyan borders
+ *    - Hover effects with platform color glow
  *
- * ✅ Search Functionality
- *    - Search by @username (e.g., @john_doe)
- *    - Search by phone number (e.g., 555-123-4567)
- *    - Mock database with sample accounts
- *    - Loading state with spinner
- *    - Error handling
- *
- * ✅ Account Cards
- *    - Avatar, name, and handle
- *    - Bio/description text
- *    - Followers, Following, Posts stats
- *    - 4 action icons (Heart, Bubble, Repost, Share)
- *    - Action counts display
- *
- * ✅ Account Age Badge
- *    - Shows "Joined: [Month] [Year]"
- *    - Red warning indicator for new accounts (< 30 days)
- *    - Positioned in top-right of card
- *    - Soft neon red alarm animation
+ * ✅ Account Status Information
+ *    - Shows if account is active/inactive
+ *    - Displays follower count per platform
+ *    - Join date for account age verification
+ *    - Security status badge (Verified, Safe, Suspicious)
+ *    - "Not Found" status for platforms without account
  *
  * ✅ Anti-Scam Warning Banner
- *    - Displays when flagged account is found
- *    - Prominent neon red styling
- *    - Message: "⚠️ CRITICAL WARNING: This account has 5+ reported scam complaints."
- *    - Smooth slide-in animation
- *    - Auto-hide when no scam account
+ *    - Prominent warning when scam accounts detected
+ *    - Shows on multiple platform flags
+ *    - Neon red styling with pulsing animation
+ *    - Custom warning message
+ *
+ * ✅ Cyber-Dark Glassmorphism Aesthetic
+ *    - #090D16 background gradient
+ *    - Translucent glass cards with blur effect
+ *    - Cyan neon borders throughout
+ *    - Platform-specific neon accent colors
+ *    - Ultra-modern design with smooth transitions
+ *
+ * ✅ Mock Database with Multi-Platform Data
+ *    - @john_doe: Active across all platforms
+ *    - @alice_smith: Active on most platforms
+ *    - @crypto_bro_2020: Flagged as suspicious/scam
+ *    - Each platform has unique follow counts
+ *    - Realistic join dates per platform
  *
  * ✅ Responsive Design
- *    - Works on desktop, tablet, and mobile
- *    - Adaptive layout for smaller screens
- *    - Touch-friendly buttons
+ *    - Mobile, tablet, and desktop optimized
+ *    - Grid adapts to screen size
+ *    - Touch-friendly interface
  *
- * ✅ Demo Accounts
- *    - @john_doe (Established developer)
- *    - @alice_smith (Marketing professional)
- *    - @crypto_bro_2020 (FLAGGED AS SCAM)
- *    - @sarah_developer (Full-stack developer)
- *    - @techguru_official (New account - warning)
- *    - 555-123-4567 (Phone lookup)
- *    - 555-987-6543 (Suspicious phone - SCAM)
+ * ✅ Real-Time Features
+ *    - System info display
+ *    - Live clock in header
+ *    - Loading spinner during search
+ *    - Error handling and validation
  */
