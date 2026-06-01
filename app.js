@@ -7,6 +7,7 @@ const appState = {
     currentSearch: null,
     results: {},
     isLoading: false,
+    hasHighRisk: false,
 };
 
 // ============ Platform Configuration ============
@@ -371,7 +372,7 @@ function getSecurityStatusDisplay(status) {
 /**
  * Render a single platform card with dynamic data
  */
-function renderPlatformCard(platformKey, data) {
+function renderPlatformCard(platformKey, data, isHighRisk = false) {
     const platform = PLATFORMS[platformKey];
     const card = document.createElement('div');
     card.className = `platform-card ${platform.className}`;
@@ -401,6 +402,10 @@ function renderPlatformCard(platformKey, data) {
     } else {
         const statusDisplay = getSecurityStatusDisplay(data.securityStatus);
         const isScamClass = data.isScam ? 'warning' : '';
+        
+        // Determine button state based on high risk
+        const buttonDisabled = isHighRisk ? 'disabled' : '';
+        const buttonClass = isHighRisk ? 'go-to-profile-btn disabled' : 'go-to-profile-btn';
         
         card.innerHTML = `
             <div class="card-header">
@@ -441,6 +446,12 @@ function renderPlatformCard(platformKey, data) {
                     <span>${statusDisplay.label}</span>
                 </div>
             </div>
+            <div class="card-footer">
+                <a href="${data.profileUrl}" target="_blank" rel="noopener noreferrer" class="${buttonClass}" ${buttonDisabled}>
+                    <span class="button-icon">→</span>
+                    <span class="button-text">Go to Profile</span>
+                </a>
+            </div>
         `;
     }
     
@@ -450,13 +461,13 @@ function renderPlatformCard(platformKey, data) {
 /**
  * Render all platform results
  */
-function renderMultiPlatformResults(username, platformResults) {
+function renderMultiPlatformResults(username, platformResults, hasHighRisk = false) {
     resultsContainer.innerHTML = '';
     
     // Create a grid of platform cards
     Object.keys(PLATFORMS).forEach(platformKey => {
         const data = platformResults[platformKey];
-        const card = renderPlatformCard(platformKey, data);
+        const card = renderPlatformCard(platformKey, data, hasHighRisk);
         resultsContainer.appendChild(card);
     });
 }
@@ -528,10 +539,14 @@ async function searchMultiPlatformLive(query) {
             
             // Check if any platform flagged as scam or high risk
             const hasScam = Object.values(platformResults).some(data => data.isScam);
+            const hasHighRisk = hasScam || riskAnalysis.isSuspicious;
+            
+            // Store high risk status in appState to control button behavior
+            appState.hasHighRisk = hasHighRisk;
             
             if (hasScam) {
                 showWarningBanner(true, 
-                    '⚠️ CRITICAL WARNING: This account shows suspicious activity patterns across multiple platforms. Exercise caution.');
+                    '⚠️ CRITICAL WARNING: This account shows suspicious activity patterns across multiple platforms. Exercise caution. Profile links have been disabled.');
             } else if (riskAnalysis.isSuspicious) {
                 showWarningBanner(true,
                     `⚠️ WARNING: The username "${query}" contains risk indicators. Verify accounts carefully.`);
@@ -539,8 +554,8 @@ async function searchMultiPlatformLive(query) {
                 showWarningBanner(false);
             }
             
-            // Render results
-            renderMultiPlatformResults(normalized, platformResults);
+            // Render results with high risk state
+            renderMultiPlatformResults(normalized, platformResults, hasHighRisk);
             searchInput.value = '';
             
         } catch (error) {
@@ -649,6 +664,14 @@ if (document.readyState === 'loading') {
  *    - Dynamic warning messages based on analysis
  *    - Pulsing animations for visibility
  *    - Multi-platform scam detection
+ *
+ * ✅ "Go to Profile" Button with Smart Protection
+ *    - Dynamically links to real platform URLs
+ *    - Uses searched username for URL generation
+ *    - Disables/hides when high scam risk detected
+ *    - Opens links in new tab safely
+ *    - Y2K neon glassmorphic styling
+ *    - Prevents access to dangerous scam accounts
  *
  * ✅ Deterministic Randomization
  *    - Same username always generates same results
